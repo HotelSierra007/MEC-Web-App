@@ -304,6 +304,7 @@
       border-bottom: 1px solid var(--border-lt);
       padding: 14px 16px; display: flex; gap: 12px;
       transition: background .12s; cursor: default;
+      touch-action: pan-y;
     }
     .ann-card:active { background: rgba(255,255,255,.03); }
     .ann-avatar {
@@ -527,6 +528,60 @@
       background: var(--bg-card); border: 1px solid var(--border);
       font-size: 13px; color: var(--text-2); line-height: 1.55;
     }
+
+    /* ─── EDUROAM INNER SCREEN ────────────────────────────── */
+    .eduroam-intro {
+      margin: 12px 16px 4px; padding: 14px 16px; border-radius: var(--r);
+      background: var(--bg-card); border: 1px solid var(--border);
+    }
+    .eduroam-intro-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .eduroam-intro-title svg { width: 20px; height: 20px; stroke: var(--teal); stroke-width: 1.8; fill: none; }
+    .eduroam-intro-text { font-size: 13px; color: var(--text-2); line-height: 1.55; }
+    .eduroam-section-label {
+      margin: 16px 16px 8px; font-size: 11px; font-weight: 700;
+      color: var(--text-3); text-transform: uppercase; letter-spacing: .08em;
+    }
+    .eduroam-list { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .eduroam-item {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 14px 14px 12px; border-radius: var(--r);
+      background: var(--brand, var(--accent)); border: 1px solid transparent;
+      text-decoration: none; color: inherit; font: inherit;
+      cursor: pointer; transition: filter .15s, transform .12s;
+      width: 100%; text-align: left;
+      position: relative; overflow: hidden;
+    }
+    /* Darker edge on left for depth */
+    .eduroam-item::before {
+      content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 4px; background: rgba(0,0,0,.2);
+    }
+    .eduroam-item:active { filter: brightness(.88); transform: scale(.99); }
+    .eduroam-item:focus-visible { outline: 2px solid rgba(255,255,255,.8); outline-offset: 2px; }
+    .eduroam-logo {
+      width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; letter-spacing: .02em;
+      background: rgba(255, 255, 255, 1);
+      color: #fff;
+    }
+    .eduroam-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 10px; padding: 5px }
+    .eduroam-body { flex: 1; min-width: 0; }
+    .eduroam-name {
+      font-size: 14px; font-weight: 700; color: var(--text-color, #fff);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .eduroam-name-en { font-size: 12px; font-weight: 500; color: var(--text-color, rgba(255,255,255,.8)); opacity: .8; margin-top: 2px; }
+    .eduroam-chevron {
+      width: 18px; height: 18px; stroke: var(--text-color, rgba(255,255,255,.75)); stroke-width: 2;
+      fill: none; flex-shrink: 0; opacity: .75;
+    }
+    .eduroam-footer-note {
+      margin: 4px 16px 16px; padding: 12px 14px; border-radius: var(--r);
+      background: var(--bg-card); border: 1px solid var(--border);
+      font-size: 12px; color: var(--text-3); line-height: 1.55;
+    }
+    .eduroam-footer-note strong { color: var(--text-2); }
     /* ── WAYFINDING ─────────────────────────────────────── */
     .wf-selectors {
       margin: 0 16px 12px;
@@ -628,8 +683,10 @@
       position: fixed; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom,0px) + 20px);
       right: 15px; z-index: 50;
       display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+      pointer-events: none;
     }
     .fab-popup {
+      pointer-events: auto;
       background: var(--bg-card); border: 1px solid var(--border);
       border-radius: 12px; padding: 10px 14px;
       font-size: 13px; font-weight: 600; color: var(--text);
@@ -640,6 +697,8 @@
     }
     .fab-popup.show { opacity: 1; pointer-events: all; transform: none; }
     .fab-btn {
+      pointer-events: auto;
+      touch-action: manipulation;
       width: 56px; height: 56px; border-radius: 50%;
       background: var(--accent); border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
@@ -687,6 +746,36 @@
     .tc-footer-txt { font-size:12px; color:var(--text-3); }
     .tc-now-badge { font-size:10px; font-weight:700; color:var(--teal); background:var(--teal-dim); border:1px solid rgba(26,191,160,.25); border-radius:20px; padding:1px 8px; margin-left:auto; }
     .tc-wrap { padding:12px 16px 0; display:flex; flex-direction:column; gap:10px; }
+
+    /* ── CAMPUS NETWORK CHECK ──────────────────────────────── */
+    .campus-tip {
+      margin: 10px 16px 0;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-left: 3px solid var(--teal);
+      border-radius: var(--r); padding: 12px 14px;
+      display: flex; align-items: flex-start; gap: 10px;
+      animation: fadeSlide .3s ease;
+    }
+    .campus-tip.hidden { display: none; }
+    .campus-tip-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .campus-tip-body { flex: 1; min-width: 0; }
+    .campus-tip-title { font-size: 13px; font-weight: 700; color: var(--teal); margin-bottom: 2px; }
+    .campus-tip-text { font-size: 13px; color: var(--text-2); line-height: 1.45; }
+    .campus-tip-link {
+      display: inline-block; margin-top: 6px; font-family: 'Sarabun';
+      font-size: 13px; font-weight: 600; color: var(--teal);
+      background: none; border: none; padding: 0; cursor: pointer;
+      text-decoration: underline; text-underline-offset: 2px;
+    }
+    .campus-tip-link:active { opacity: .7; }
+    .campus-tip-close {
+      flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; font-family: 'Sarabun';
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: none; cursor: pointer; color: var(--text-3);
+      transition: background .15s, color .15s;
+    }
+    .campus-tip-close:active { background: rgba(255,255,255,.08); color: var(--text); }
+    .campus-tip-close svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 2; fill: none; }
   </style>
 </head>
 <body style="background:#000;margin:0;padding:0;">
@@ -722,6 +811,17 @@
           <div class="protip-text">Tap <strong>Share</strong> then <strong>Add to Home Screen</strong> for the best app experience and offline access.</div>
         </div>
         <button class="protip-close" onclick="dismissProtip()" aria-label="Close">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="campus-tip hidden" id="campus-tip">
+        <div class="campus-tip-icon">📶</div>
+        <div class="campus-tip-body">
+          <div class="campus-tip-title">Eduroam Free Wi-Fi Available</div>
+          <div class="campus-tip-text">คุณสามารถเชื่อมต่อเครือข่ายของมหาวิทยาลัยได้ทั่วประเทศ<br><button class="campus-tip-link" onclick="dismissCampusCheck(); showEduroamPage()">ดูคู่มือการเชื่อมต่อ Eduroam →</button></div>
+        </div>
+        <button class="campus-tip-close" onclick="dismissCampusCheck()" aria-label="Close">
           <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
@@ -968,7 +1068,7 @@
           <div class="wf-toilet-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;color:var(--teal)"><rect x="7" y="2" width="10" height="5" rx="1"/><path d="M6 7h12v2H6z"/><path d="M5 9c0 5 2 8 7 8s7-3 7-8H5z"/><path d="M9 17v3M15 17v3M8 20h8"/></svg></div>
           <div class="wf-toilet-body">
             <div class="wf-toilet-name">อาคารสุจิณโณ</div>
-            <div class="wf-toilet-detail">กรุณาใช้ห้องน้ำบริเวณอาคารข้างเคียง <span class="wf-tip">(เฉพาะชั้น 15 เท่านั้น)</span></div>
+            <div class="wf-toilet-detail">กรุณาใช้ห้องน้ำบริเวณอาคารข้างเคียง <span class="wf-tip">(เฉพาะชั้น 1 เท่านั้น)</span></div>
           </div>
         </div>
       </div>
@@ -1023,6 +1123,30 @@
       <div style="height:16px"></div>
     </div>
 
+    <!-- ── EDUROAM SCREEN ────────────────────────────────── -->
+    <div class="screen" id="screen-eduroam">
+      <button class="photos-back" onclick="goTo('home',document.getElementById('nav-home'))" aria-label="Back to home">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <div class="eduroam-intro">
+        <div class="eduroam-intro-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12.55a11 11 0 0114 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          Eduroam Wi-Fi
+        </div>
+        <div class="eduroam-intro-text">
+          เลือกสถาบันของท่านเพื่อดูคู่มือเชื่อมต่อ Eduroam<br>
+          <span style="color:var(--text-3);font-size:12px">Choose your home institution to view the Eduroam connection guide.</span>
+        </div>
+      </div>
+      <div class="eduroam-section-label">Institutions</div>
+      <div class="eduroam-list" id="eduroam-list" role="list"></div>
+      <div class="eduroam-footer-note">
+        <strong>หมายเหตุ:</strong> หากสถาบันของท่านไม่มีในรายการนี้ แสดงว่าสถาบันไม่ได้เข้าร่วมในเครือข่าย eduroam ขออภัยในความไม่สะดวก
+      </div>
+      <div style="height:16px"></div>
+    </div>
+
   </div><!-- /screens -->
 
   <!-- ── BOTTOM NAV ── -->
@@ -1054,15 +1178,15 @@
   </nav>
 
 
-  <!-- ── FEEDBACK FAB ── -->
-  <div class="fab-feedback" id="fab-feedback">
-    <div class="fab-popup" id="fab-popup" role="status">Give us feedback!</div>
-    <button class="fab-btn" id="fab-btn" onclick="handleFab()" aria-label="Open feedback form">
-      <svg id="fab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-    </button>
-  </div>
-
 </div><!-- /shell -->
+
+<!-- ── FEEDBACK FAB — outside shell to avoid scroll interference ── -->
+<div class="fab-feedback" id="fab-feedback">
+  <div class="fab-popup" id="fab-popup" role="status">Give us feedback!</div>
+  <button class="fab-btn" id="fab-btn" onclick="handleFab()" aria-label="Open feedback form">
+    <svg id="fab-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+  </button>
+</div>
 
 <!-- ── SIDE DRAWER ── -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
@@ -1084,6 +1208,10 @@
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       MEC Photos
     </button>
+    <button class="drawer-item" onclick="closeDrawer();showEduroamPage()">
+      <svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0114 0"/><path d="M1.42 9a16 16 0 0121.16 0"/><path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      Eduroam Wi-Fi
+    </button>
 <a class="drawer-item" href="https://github.com/HotelSierra007/MEC-Web-App" target="_blank" onclick="closeDrawer()">
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
       Source Code
@@ -1096,9 +1224,46 @@
 
 <script>
 // ════════════════════════════════════════════════════════
+// CAMPUS NETWORK CHECK
+// Add campus IP prefixes or exact IPs once known.
+// Supports exact match ("10.1.2.3") or prefix ("10.1.2.").
+// Leave empty [] to disable the check entirely.
+// ════════════════════════════════════════════════════════
+const CAMPUS_IP_PREFIXES = [
+  //"202.",
+  "192."
+];
+
+function isOnCampusNetwork(ip) {
+  if (!CAMPUS_IP_PREFIXES.length) return true;
+  return CAMPUS_IP_PREFIXES.some(function(p) {
+    return ip === p || ip.startsWith(p);
+  });
+}
+
+function showCampusCheckSheet() {
+  document.getElementById('campus-tip').classList.remove('hidden');
+}
+
+function dismissCampusCheck() {
+  document.getElementById('campus-tip').classList.add('hidden');
+}
+
+function checkCampusNetwork() {
+  if (!CAMPUS_IP_PREFIXES.length) return;
+  fetch('https://api.ipify.org?format=json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      console.log('[Campus check] Current IP:', data.ip, '| On campus:', isOnCampusNetwork(data.ip));
+      if (!isOnCampusNetwork(data.ip)) showCampusCheckSheet();
+    })
+    .catch(function() { /* silently skip on API or network failure */ });
+}
+
+// ════════════════════════════════════════════════════════
 // DATA — edit here to update content
 // ════════════════════════════════════════════════════════
-const CAMP_START = new Date("2026-05-06T00:00:00");
+const CAMP_START = new Date("2026-05-14T00:00:00");
 
 // Mutable: replaced at runtime by loadAnnouncements() from /data.json.
 // The values here are seed data for first paint before the fetch resolves
@@ -1820,6 +1985,138 @@ function showPhotosPage() {
 }
 
 // ════════════════════════════════════════════════════════
+// EDUROAM
+// Edit this list to add/remove institutions or change URLs/colors.
+// `monogram` is the fallback shown inside the colored circle when
+// no `logo` URL is set. To use a real logo, set `logo: "cmu-logo.png"`
+// (and put the file in the project root — keep it square, ~88×88).
+// `color` is any CSS color; controls the left stripe and monogram tint.
+// `url` is the page that opens when the button is tapped.
+// ════════════════════════════════════════════════════════
+const EDUROAM_INSTITUTIONS = [
+  {
+    nameTh: "มหาวิทยาลัยมหิดล",
+    nameEn: "Mahidol University",
+    monogram: "MU",
+    logo: "https://www.google.com/s2/favicons?domain=mahidol.ac.th&sz=64",
+    color: "#003C71",          // Mahidol navy
+    url: "https://muit.mahidol.ac.th/eduroam"
+  },
+  {
+    nameTh: "จุฬาลงกรณ์มหาวิทยาลัย",
+    nameEn: "Chulalongkorn University",
+    monogram: "CU",
+    logo: "https://www.google.com/s2/favicons?domain=chula.ac.th&sz=64",
+    color: "#E91E63",          // Chula pink
+    url: "https://www.it.chula.ac.th/asked_questions/eduroam-%E0%B8%84%E0%B8%B7%E0%B8%AD%E0%B8%AD%E0%B8%B0%E0%B9%84%E0%B8%A3/"
+  },
+  {
+    nameTh: "มหาวิทยาลัยขอนแก่น",
+    nameEn: "Khon Kaen University",
+    monogram: "KKU",
+    logo: "https://www.google.com/s2/favicons?domain=kku.ac.th&sz=64",
+    color: "#8D1538",          // KKU dindaeng
+    url: "https://digital.kku.ac.th/page/86"
+  },
+  {
+    nameTh: "มหาวิทยาลัยสงขลานครินทร์",
+    nameEn: "Prince of Songkla University",
+    monogram: "PSU",
+    logo: "https://www.google.com/s2/favicons?domain=psu.ac.th&sz=64",
+    color: "#003B71",          // PSU blue
+    url: "https://net.psu.ac.th/index.php/th/?option=com_content&view=article&id=25"
+  },
+  {
+    nameTh: "มหาวิทยาลัยนเรศวร",
+    nameEn: "Naresuan University",
+    monogram: "NU",
+    logo: "https://www.google.com/s2/favicons?domain=nu.ac.th&sz=64",
+    color: "#5B2C6F",          // NU purple
+    url: "https://eduroam.nu.ac.th/"
+  },
+  {
+    nameTh: "มหาวิทยาลัยธรรมศาสตร์",
+    nameEn: "Thammasat University",
+    monogram: "TU",
+    logo: "https://www.google.com/s2/favicons?domain=tu.ac.th&sz=64",
+    color: "#FFD700",          // TU yellow
+    textColor: "#1a1a1a",
+    url: "https://eduroam.tu.ac.th/"
+  },
+  {
+    nameTh: "มหาวิทยาลัยศรีนครินทรวิโรฒ",
+    nameEn: "Srinakharinwirot University",
+    monogram: "SWU",
+    logo: "https://www.google.com/s2/favicons?domain=swu.ac.th&sz=64",
+    color: "#7C3F00",          // SWU brown-orange
+    url: "https://lib.swu.ac.th/images/Documents/Aboutus/%E0%B8%84%E0%B8%B9%E0%B9%88%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B9%83%E0%B8%8A%E0%B9%89%E0%B8%87%E0%B8%B2%E0%B8%99_Eduroam-ios_-_%E0%B8%84%E0%B8%A3%E0%B8%B1%E0%B9%89%E0%B8%87%E0%B8%97%E0%B8%B5%E0%B9%881.pdf"
+  },
+  {
+    nameTh: "มหาวิทยาลัยบูรพา",
+    nameEn: "Burapha University",
+    monogram: "BUU",
+    logo: "https://www.google.com/s2/favicons?domain=buu.ac.th&sz=64",
+    color: "#1E5BA8",          // BUU blue updated till here
+    url: "https://eduroam.buu.ac.th/"
+  },
+  {
+    nameTh: "มหาวิทยาลัยมหาสารคาม",
+    nameEn: "Mahasarakham University",
+    monogram: "MSU",
+    logo: "https://www.google.com/s2/favicons?domain=msu.ac.th&sz=64",
+    color: "#FFC600",          // MSU yellow
+    textColor: "#1a1a1a",
+    url: "https://www.msu.ac.th/eduroam"
+  },
+  {
+    nameTh: "มหาวิทยาลัยวลัยลักษณ์",
+    nameEn: "Walailak University",
+    monogram: "WU",
+    logo: "https://www.google.com/s2/favicons?domain=wu.ac.th&sz=64",
+    color: "#7E22CE",          // WU purple
+    url: "https://www.wu.ac.th/eduroam"
+  },
+  {
+    nameTh: "มหาวิทยาลัยพะเยา",
+    nameEn: "University of Phayao",
+    monogram: "UP",
+    logo: "https://www.google.com/s2/favicons?domain=up.ac.th&sz=64",
+    color: "#7C2D12",          // UP maroon
+    url: "https://www.up.ac.th/eduroam"
+  }
+];
+
+function renderEduroam() {
+  const list = document.getElementById('eduroam-list');
+  if (!list) return;
+  list.innerHTML = EDUROAM_INSTITUTIONS.map(function(inst) {
+    const logoInner = inst.logo
+      ? '<img src="' + esc(inst.logo) + '" alt="" loading="lazy" decoding="async"/>'
+      : esc(inst.monogram);
+    return ''
+      + '<a class="eduroam-item" href="' + esc(inst.url) + '" target="_blank" rel="noopener noreferrer"'
+      + ' style="--brand:' + esc(inst.color) + (inst.textColor ? ';--text-color:' + esc(inst.textColor) : '') + '"'
+      + ' role="listitem"'
+      + ' aria-label="' + esc(inst.nameEn) + ' Eduroam guide">'
+      +   '<div class="eduroam-logo" aria-hidden="true">' + logoInner + '</div>'
+      +   '<div class="eduroam-body">'
+      +     '<div class="eduroam-name">' + esc(inst.nameTh) + '</div>'
+      +     '<div class="eduroam-name-en">' + esc(inst.nameEn) + '</div>'
+      +   '</div>'
+      +   '<svg class="eduroam-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><polyline points="9 18 15 12 9 6"/></svg>'
+      + '</a>';
+  }).join('');
+}
+
+function showEduroamPage() {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-eduroam').classList.add('active');
+  document.getElementById('screen-eduroam').scrollTop = 0;
+  renderEduroam();
+}
+
+// ════════════════════════════════════════════════════════
 // FEEDBACK FAB
 // ════════════════════════════════════════════════════════
 var fabState = 0; // 0=idle, 1=confirm
@@ -2121,6 +2418,9 @@ document.addEventListener('DOMContentLoaded', function() {
   renderRoute();
   updateAnnounceBadge();
   enhanceAccordionA11y(); // covers static AED accordion (renderSOS already enhances the dynamic first-aid one)
+
+  // Check if user is on campus network; prompt Eduroam guide if not.
+  checkCampusNetwork();
 
   // Then refresh announcements from /data.json (live).
   loadAnnouncements();
