@@ -1075,7 +1075,7 @@
           <div class="wf-toilet-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;color:var(--teal)"><rect x="7" y="2" width="10" height="5" rx="1"/><path d="M6 7h12v2H6z"/><path d="M5 9c0 5 2 8 7 8s7-3 7-8H5z"/><path d="M9 17v3M15 17v3M8 20h8"/></svg></div>
           <div class="wf-toilet-body">
             <div class="wf-toilet-name">อาคารสุจิณโณ</div>
-            <div class="wf-toilet-detail">กรุณาใช้ห้องน้ำบริเวณอาคารข้างเคียง <span class="wf-tip">(เฉพาะชั้น 15 เท่านั้น)</span></div>
+            <div class="wf-toilet-detail">อยู่บริเวณข้างโถงลิฟต์ของทุกชั้น <span class="wf-tip">(ยกเว้นชั้น 1)</span></div>
           </div>
         </div>
       </div>
@@ -1142,8 +1142,8 @@
           Eduroam Wi-Fi
         </div>
         <div class="eduroam-intro-text">
-          เลือกสถาบันของท่านเพื่อดูคู่มือเชื่อมต่อ Eduroam<br>
-          <span style="color:var(--text-3);font-size:12px">Choose your home institution to view the Eduroam connection guide.</span>
+          Username และ Password โดยทั่วไปจะเป็นรหัสเดียวกับบัญชีสถาบันของท่าน<br>
+          หรือสามารถเลือกสถาบันเพื่อดูคู่มือเชื่อมต่อ Eduroam<br>
         </div>
       </div>
       <div class="eduroam-section-label">Institutions</div>
@@ -1254,10 +1254,13 @@ function showCampusCheckSheet() {
 
 function dismissCampusCheck() {
   document.getElementById('campus-tip').classList.add('hidden');
+  localStorage.setItem('campusTipDismissed', Date.now().toString());
 }
 
 function checkCampusNetwork() {
   if (!CAMPUS_IP_PREFIXES.length) return;
+  var dismissedTime = localStorage.getItem('campusTipDismissed');
+  if (dismissedTime && (Date.now() - parseInt(dismissedTime)) < 3600000) return; // 1 hour = 3600000 ms
   fetch('https://api.ipify.org?format=json')
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -2014,7 +2017,7 @@ const EDUROAM_INSTITUTIONS = [
     nameEn: "Mahidol University",
     monogram: "MU",
     logo: "https://www.google.com/s2/favicons?domain=mahidol.ac.th&sz=64",
-    color: "#003C71",          // Mahidol navy
+    color: "#003C71",          
     url: "https://muit.mahidol.ac.th/eduroam"
   },
   {
@@ -2022,7 +2025,7 @@ const EDUROAM_INSTITUTIONS = [
     nameEn: "Chulalongkorn University",
     monogram: "CU",
     logo: "https://www.google.com/s2/favicons?domain=chula.ac.th&sz=64",
-    color: "#E91E63",          // Chula pink
+    color: "#E91E63",          
     url: "https://www.it.chula.ac.th/asked_questions/eduroam-%E0%B8%84%E0%B8%B7%E0%B8%AD%E0%B8%AD%E0%B8%B0%E0%B9%84%E0%B8%A3/"
   },
   {
@@ -2030,7 +2033,7 @@ const EDUROAM_INSTITUTIONS = [
     nameEn: "Khon Kaen University",
     monogram: "KKU",
     logo: "https://www.google.com/s2/favicons?domain=kku.ac.th&sz=64",
-    color: "#8D1538",          // KKU dindaeng
+    color: "#A73B24",          
     url: "https://digital.kku.ac.th/page/86"
   },
   {
@@ -2038,7 +2041,7 @@ const EDUROAM_INSTITUTIONS = [
     nameEn: "Prince of Songkla University",
     monogram: "PSU",
     logo: "https://www.google.com/s2/favicons?domain=psu.ac.th&sz=64",
-    color: "#003B71",          // PSU blue
+    color: "#003B71",          
     url: "https://net.psu.ac.th/index.php/th/?option=com_content&view=article&id=25"
   },
   {
@@ -2046,7 +2049,7 @@ const EDUROAM_INSTITUTIONS = [
     nameEn: "Naresuan University",
     monogram: "NU",
     logo: "https://www.google.com/s2/favicons?domain=nu.ac.th&sz=64",
-    color: "#5B2C6F",          // NU purple
+    color: "#5B2C6F",          
     url: "https://eduroam.nu.ac.th/"
   },
   {
@@ -2054,8 +2057,7 @@ const EDUROAM_INSTITUTIONS = [
     nameEn: "Thammasat University",
     monogram: "TU",
     logo: "https://www.google.com/s2/favicons?domain=tu.ac.th&sz=64",
-    color: "#FFD700",          // TU yellow
-    textColor: "#1a1a1a",
+    color: "#E13128",          
     url: "https://eduroam.tu.ac.th/"
   },
   {
@@ -2063,42 +2065,89 @@ const EDUROAM_INSTITUTIONS = [
     nameEn: "Srinakharinwirot University",
     monogram: "SWU",
     logo: "https://www.google.com/s2/favicons?domain=swu.ac.th&sz=64",
-    color: "#7C3F00",          // SWU brown-orange
+    color: "#ED1C24",          
     url: "https://lib.swu.ac.th/images/Documents/Aboutus/%E0%B8%84%E0%B8%B9%E0%B9%88%E0%B8%A1%E0%B8%B7%E0%B8%AD%E0%B8%81%E0%B8%B2%E0%B8%A3%E0%B9%83%E0%B8%8A%E0%B9%89%E0%B8%87%E0%B8%B2%E0%B8%99_Eduroam-ios_-_%E0%B8%84%E0%B8%A3%E0%B8%B1%E0%B9%89%E0%B8%87%E0%B8%97%E0%B8%B5%E0%B9%881.pdf"
   },
   {
     nameTh: "มหาวิทยาลัยบูรพา",
     nameEn: "Burapha University",
     monogram: "BUU",
-    logo: "https://www.google.com/s2/favicons?domain=buu.ac.th&sz=64",
-    color: "#1E5BA8",          // BUU blue updated till here
+    logo: "https://www.buu.ac.th/wp-content/uploads/elementor/thumbs/Image-34@2x-q6om8nd4a2wra18ljry0vo6jrzxuk1rmk1n9f696ok.png",
+    color: "#FFD700",   
+    textColor: "#1a1a1a",       
     url: "https://eduroam.buu.ac.th/"
   },
   {
-    nameTh: "มหาวิทยาลัยมหาสารคาม",
-    nameEn: "Mahasarakham University",
-    monogram: "MSU",
-    logo: "https://www.google.com/s2/favicons?domain=msu.ac.th&sz=64",
-    color: "#FFC600",          // MSU yellow
-    textColor: "#1a1a1a",
-    url: "https://www.msu.ac.th/eduroam"
-  },
-  {
     nameTh: "มหาวิทยาลัยวลัยลักษณ์",
-    nameEn: "Walailak University",
+    nameEn: "(ใช้ Username และ Password ของสถาบันตนเอง)",
     monogram: "WU",
-    logo: "https://www.google.com/s2/favicons?domain=wu.ac.th&sz=64",
-    color: "#7E22CE",          // WU purple
-    url: "https://www.wu.ac.th/eduroam"
+    logo: "https://www.wu.ac.th/uploads/logoWU_1631668089.png",
+    color: "#FF6600",   
   },
   {
     nameTh: "มหาวิทยาลัยพะเยา",
-    nameEn: "University of Phayao",
+    nameEn: "(ใช้ Username และ Password ของสถาบันตนเอง)",
     monogram: "UP",
     logo: "https://www.google.com/s2/favicons?domain=up.ac.th&sz=64",
-    color: "#7C2D12",          // UP maroon
-    url: "https://www.up.ac.th/eduroam"
-  }
+    color: "#6E298D",      
+  },
+  {
+    nameTh: "มหาวิทยาลัยเกษตรศาสตร์",
+    nameEn: "Kasetsart University",
+    monogram: "KU",
+    logo: "https://www.ku.ac.th/assets/images/header/KU_logo_62x62_th.svg",
+    color: "#006600",
+    url:"https://eduroam.ku.ac.th/"
+  },
+  {
+  nameTh: "มหาวิทยาลัยสยาม",
+  nameEn: "Siam University",
+  monogram: "SU",
+  logo: "https://www.google.com/s2/favicons?domain=siam.edu&sz=64",
+  color: "#800000",
+  url:"https://www.facebook.com/share/p/1CRBRLCANG/"
+  },
+  {
+  nameTh: "สถาบันวิจัยจุฬาภรณ์",
+  nameEn: "Chulabhorn Research Institute",
+  monogram: "CRI",
+  logo: "https://www.google.com/s2/favicons?domain=cri.or.th&sz=64",
+  color: "#F39200",
+  url:"https://www.facebook.com/share/p/1CRBRLCANG/"
+  },
+  {
+  nameTh: "มหาวิทยาลัยแม่ฟ้าหลวง",
+  nameEn: "Mae Fah Luang University",
+  monogram: "MFU",
+  logo: "https://www.google.com/s2/favicons?domain=mfu.ac.th&sz=64",
+  color: "#8E110F",
+	url:"https://cits.mfu.ac.th/services/mfu-eduroam.html"
+  },
+    {
+  nameTh: "สถาบันเทคโนโลยีพระจอมเกล้าเจ้าคุณทหารลาดกระบัง",
+  nameEn: "King Mongkut's Institute of Technology Ladkrabang",
+  monogram: "KMITL",
+  logo: "https://www.kmitl.ac.th/themes/custom/kmitl/logo.svg",
+  color: "#FF6600",
+	url: "https://www.facebook.com/share/p/18dPaFsunh/"
+  },
+  {
+  nameTh: "มหาวิทยาลัยอุบลราชธานี",
+  nameEn: "Ubon Ratchathani University",
+  monogram: "UBU",
+  logo: "https://www.ubu.ac.th/UBU2025/assets/images/ubu_logo_2021_resize.png",
+  color: "#FFD700",
+  textColor: "#1a1a1a",
+  url: "https://www.facebook.com/share/p/18PJhmyiZt/"
+  },
+  {
+  nameTh: "มหาวิทยาลัยเทคโนโลยีสุรนารี",
+  nameEn: "Suranaree University of Technology",
+  monogram: "SUT",
+  logo: "https://upload.wikimedia.org/wikipedia/th/1/1b/%E0%B8%95%E0%B8%A3%E0%B8%B2%E0%B8%A1%E0%B8%AB%E0%B8%B2%E0%B8%A7%E0%B8%B4%E0%B8%97%E0%B8%A2%E0%B8%B2%E0%B8%A5%E0%B8%B1%E0%B8%A2%E0%B9%80%E0%B8%97%E0%B8%84%E0%B9%82%E0%B8%99%E0%B9%82%E0%B8%A5%E0%B8%A2%E0%B8%B5%E0%B8%AA%E0%B8%B8%E0%B8%A3%E0%B8%99%E0%B8%B2%E0%B8%A3%E0%B8%B5.svg",
+  color: "#E35205",
+	url: "https://eduroam.sut.ac.th/index.php/how-to-use"
+  },
 ];
 
 function renderEduroam() {
