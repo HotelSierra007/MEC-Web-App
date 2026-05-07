@@ -1075,7 +1075,7 @@
           <div class="wf-toilet-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;color:var(--teal)"><rect x="7" y="2" width="10" height="5" rx="1"/><path d="M6 7h12v2H6z"/><path d="M5 9c0 5 2 8 7 8s7-3 7-8H5z"/><path d="M9 17v3M15 17v3M8 20h8"/></svg></div>
           <div class="wf-toilet-body">
             <div class="wf-toilet-name">อาคารสุจิณโณ</div>
-            <div class="wf-toilet-detail">อยู่บริเวณข้างโถงลิฟต์ของทุกชั้น <span class="wf-tip">(ยกเว้นชั้น 1)</span></div>
+            <div class="wf-toilet-detail">อยู่บริเวณข้างโถงลิฟต์ของทุกชั้น <span class="wf-tip">(เฉพาะชั้น 15 เท่านั้น)</span></div>
           </div>
         </div>
       </div>
@@ -1393,7 +1393,7 @@ const FIRST_AID = [
   },
 ];
 
-const SCHEDULE = [
+let SCHEDULE = [
   // ── DAY 1 · Thu 14 May 2026 ─────────────────────────────
   { day:0, time:"09:00", end:"09:30", name:"ลงทะเบียน", location:"ห้องประชุมชั้น 2 อาคารเรียนและปฏิบัติการ 50 ปี", tag:"special" },
   { day:0, time:"09:30", end:"10:00", name:"พิธีเปิดโครงการค่ายจริยธรรมสัญจรครั้งที่ 23", location:"ห้องประชุมชั้น 2 อาคารเรียนและปฏิบัติการ 50 ปี", tag:"special" },
@@ -1427,7 +1427,7 @@ const SCHEDULE = [
 ]
 
 
-const TRANSPORT = [
+let TRANSPORT = [
   // DAY 0 · Wed 13 May 2026 (arrival day)
   { day:-1, time:"11:30", arrive:"11:50", from:"สนามบิน", to:"Furama", vehicle:"รถตู้", count:1 },
   { day:-1, time:"11:50", arrive:"12:10", from:"สนามบิน", to:"Furama", vehicle:"รถตู้", count:1 },
@@ -1836,6 +1836,7 @@ function renderSchedule(scrollToCurrent) {
   // Re-register passive touch on dynamically injected content
   var stl = document.getElementById('sched-tl');
   if (stl) {
+    stl.innerHTML += liveDataStaleLabel();
     stl.addEventListener('touchstart', function(){}, {passive: true});
     stl.addEventListener('touchmove', function(){}, {passive: true});
   }
@@ -1943,7 +1944,7 @@ function renderTransport(scrollToCurrent, dayVal) {
     '</div>';
   }
   html += '</div>';
-  document.getElementById('transport-tl').innerHTML = html || '<div style="padding:20px 16px;color:var(--text-3);font-size:14px;text-align:center;">ไม่มีรอบรถในวันนี้</div>';
+  document.getElementById('transport-tl').innerHTML = (html || '<div style="padding:20px 16px;color:var(--text-3);font-size:14px;text-align:center;">ไม่มีรอบรถในวันนี้</div>') + liveDataStaleLabel();
   // Re-register passive touch on dynamically injected content
   var tl = document.getElementById('transport-tl');
   if (tl) {
@@ -2398,10 +2399,9 @@ function swapLocations() {
 }
 
 // ════════════════════════════════════════════════════════
-// LIVE ANNOUNCEMENTS — fetch from /data.json so organizers
-// can update without redeploying index.html.
-// Also tracks "unread" via localStorage and badges the
-// Updates tab when there's something the user hasn't seen.
+// LIVE DATA — fetches Schedule, Transport, and Announcements
+// from published Google Sheets CSVs. Also tracks "unread"
+// announcements via localStorage and badges the Updates tab.
 // ════════════════════════════════════════════════════════
 const SEEN_KEY = 'mec_seen_announcement_ids';
 const FIRST_LAUNCH_KEY = 'mec_first_launch_done';
@@ -2443,22 +2443,255 @@ function updateAnnounceBadge() {
   badge.hidden = !hasUnread;
 }
 
-async function loadAnnouncements() {
-  try {
-    // Cache-bust with timestamp so we always get the freshest version.
-    // The service worker's network-first strategy on data.json handles offline fallback.
-    const res = await fetch('/data.json?t=' + Date.now(), { cache: 'no-cache' });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (!data || !Array.isArray(data.announcements)) return;
-    ANNOUNCEMENTS = data.announcements;
-    renderHomeAnnounce();
-    renderAnnouncements();
-    updateAnnounceBadge();
-  } catch (e) {
-    // Network error or invalid JSON — keep whatever we already have.
-    // Seed data and any previously-cached version still work.
+// ════════════════════════════════════════════════════════
+// LIVE DATA — fetches Schedule, Transport, and Announcements
+// from published Google Sheets CSVs. Falls back through:
+//   1. Live network fetch (freshest)
+//   2. Service worker cache (last successful fetch this session)
+//   3. localStorage 'mec_live_cache' (last fetch from any session)
+//   4. Hardcoded arrays already in index.html (cold-start safety net)
+//
+// To enable: paste each tab's published-CSV URL below.
+// To disable any tab: set its URL to "" — that tab uses the
+// hardcoded array in index.html and never tries to fetch.
+// To disable everything: set all three URLs to "".
+// ════════════════════════════════════════════════════════
+
+const LIVE_DATA = {
+  schedule:      "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFbjmvFfqi2hqygI58p3-m5PRu29XVUyryAFaYDqChDygb1c29KilZ4lTXzuKUbvzB3CIstvbcYgnU/pub?gid=0&single=true&output=csv",
+  transport:     "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFbjmvFfqi2hqygI58p3-m5PRu29XVUyryAFaYDqChDygb1c29KilZ4lTXzuKUbvzB3CIstvbcYgnU/pub?gid=2137871051&single=true&output=csv",
+  announcements: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSFbjmvFfqi2hqygI58p3-m5PRu29XVUyryAFaYDqChDygb1c29KilZ4lTXzuKUbvzB3CIstvbcYgnU/pub?gid=1380652308&single=true&output=csv",
+};
+
+const LIVE_CACHE_KEY = 'mec_live_cache_v1';
+const LIVE_STALE_AFTER_MS = 10 * 60 * 1000; // show "stale" indicator after 10 min
+let liveDataFetchedAt = null; // timestamp of last successful fetch this session
+
+// ─── CSV PARSER ───────────────────────────────────────────
+// Handles quoted fields containing commas, escaped quotes ("")
+// and CRLF line endings. Returns an array of row objects keyed
+// by header name. Empty rows are skipped. Trailing whitespace
+// in headers and cells is trimmed.
+function parseCsv(text) {
+  if (!text || typeof text !== 'string') return [];
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let inQuotes = false;
+  let i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"' && text[i + 1] === '"') { cell += '"'; i += 2; continue; }
+      if (ch === '"') { inQuotes = false; i++; continue; }
+      cell += ch; i++; continue;
+    }
+    if (ch === '"') { inQuotes = true; i++; continue; }
+    if (ch === ',') { row.push(cell); cell = ''; i++; continue; }
+    if (ch === '\r') { i++; continue; }
+    if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; i++; continue; }
+    cell += ch; i++;
   }
+  if (cell.length > 0 || row.length > 0) { row.push(cell); rows.push(row); }
+  if (rows.length < 2) return [];
+  const headers = rows[0].map(h => String(h || '').trim());
+  const out = [];
+  for (let r = 1; r < rows.length; r++) {
+    const cells = rows[r];
+    if (!cells.some(c => String(c || '').trim() !== '')) continue;
+    const obj = {};
+    for (let c = 0; c < headers.length; c++) {
+      obj[headers[c]] = cells[c] !== undefined ? String(cells[c]).trim() : '';
+    }
+    out.push(obj);
+  }
+  return out;
+}
+
+// ─── NORMALIZERS ──────────────────────────────────────────
+// Map CSV row shapes to the existing in-app data shapes
+// (the renderers in index.html expect these exact field names).
+
+function normalizeScheduleRow(r) {
+  const dayInt = parseInt(r.day, 10);
+  if (isNaN(dayInt)) return null;
+  if (!r.start || !r.name_th && !r.name_en) return null;
+  return {
+    day:      dayInt - 1,
+    time:     r.start,
+    end:      r.end || '',
+    name:     r.name_th || r.name_en,
+    name_en:  r.name_en || '',
+    location: r.location || '',
+    tag:      r.tag || 'session',
+    speaker:  r.speaker || '',
+    track:    r.track || 'all',
+    _id:      r.id || '',
+  };
+}
+
+function normalizeTransportRow(r) {
+  const dayInt = parseInt(r.day, 10);
+  if (isNaN(dayInt)) return null;
+  if (!r.depart || !r.from || !r.to) return null;
+  return {
+    day:     dayInt - 1,
+    time:    r.depart,
+    arrive:  r.arrive || '',
+    from:    r.from,
+    to:      r.to,
+    vehicle: r.vehicle || '',
+    count:   parseInt(r.count, 10) || 1,
+    status:  r.status || 'scheduled',
+    notes:   r.notes || '',
+    _id:     r.id || '',
+  };
+}
+
+function normalizeAnnouncementRow(r) {
+  if (String(r.active).toUpperCase() === 'FALSE') return null;
+  const id = parseInt(r.id, 10);
+  if (isNaN(id)) return null;
+  if (!r.message_th && !r.message_en) return null;
+  let date = '', time = '';
+  const ts = String(r.timestamp || '').trim();
+  if (ts) {
+    const d = new Date(ts.replace(' ', 'T'));
+    if (!isNaN(d.getTime())) {
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      date = d.getDate() + ' ' + months[d.getMonth()];
+      time = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    } else {
+      const parts = ts.split(/\s+/);
+      if (parts.length >= 2) { date = parts.slice(0, -1).join(' '); time = parts[parts.length - 1]; }
+    }
+  }
+  return {
+    id:      id,
+    date:    date,
+    time:    time,
+    type:    r.type || 'info',
+    message: r.message_th || r.message_en,
+  };
+}
+
+// ─── FETCH + APPLY ────────────────────────────────────────
+
+async function fetchCsvTab(url) {
+  if (!url) return null;
+  const bust = (url.indexOf('?') >= 0 ? '&' : '?') + 't=' + Date.now();
+  const res = await fetch(url + bust, { cache: 'no-cache' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+  return parseCsv(text);
+}
+
+async function loadLiveData() {
+  let updated = false;
+  let anyEnabled = false;
+
+  if (LIVE_DATA.schedule) {
+    anyEnabled = true;
+    try {
+      const rows = await fetchCsvTab(LIVE_DATA.schedule);
+      if (rows && rows.length) {
+        const normalized = rows.map(normalizeScheduleRow).filter(Boolean);
+        if (normalized.length) {
+          SCHEDULE.length = 0;
+          normalized.forEach(s => SCHEDULE.push(s));
+          updated = true;
+        }
+      }
+    } catch (e) { console.warn('[LiveData] schedule fetch failed:', e.message); }
+  }
+
+  if (LIVE_DATA.transport) {
+    anyEnabled = true;
+    try {
+      const rows = await fetchCsvTab(LIVE_DATA.transport);
+      if (rows && rows.length) {
+        const normalized = rows.map(normalizeTransportRow).filter(Boolean);
+        if (normalized.length) {
+          TRANSPORT.length = 0;
+          normalized.forEach(t => TRANSPORT.push(t));
+          updated = true;
+        }
+      }
+    } catch (e) { console.warn('[LiveData] transport fetch failed:', e.message); }
+  }
+
+  if (LIVE_DATA.announcements) {
+    anyEnabled = true;
+    try {
+      const rows = await fetchCsvTab(LIVE_DATA.announcements);
+      if (rows && rows.length) {
+        const normalized = rows.map(normalizeAnnouncementRow).filter(Boolean);
+        normalized.sort((a, b) => b.id - a.id);
+        if (normalized.length) {
+          ANNOUNCEMENTS = normalized;
+          updated = true;
+        }
+      }
+    } catch (e) { console.warn('[LiveData] announcements fetch failed:', e.message); }
+  }
+
+  if (updated) {
+    liveDataFetchedAt = Date.now();
+    try {
+      localStorage.setItem(LIVE_CACHE_KEY, JSON.stringify({
+        schedule:      SCHEDULE,
+        transport:     TRANSPORT,
+        announcements: ANNOUNCEMENTS,
+        fetchedAt:     liveDataFetchedAt,
+      }));
+    } catch (e) {}
+    rerenderAfterLiveData();
+  } else if (anyEnabled && liveDataFetchedAt === null) {
+    restoreLiveDataFromCache();
+  }
+}
+
+function restoreLiveDataFromCache() {
+  try {
+    const raw = localStorage.getItem(LIVE_CACHE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (Array.isArray(data.schedule) && data.schedule.length) {
+      SCHEDULE.length = 0;
+      data.schedule.forEach(s => SCHEDULE.push(s));
+    }
+    if (Array.isArray(data.transport) && data.transport.length) {
+      TRANSPORT.length = 0;
+      data.transport.forEach(t => TRANSPORT.push(t));
+    }
+    if (Array.isArray(data.announcements) && data.announcements.length) {
+      ANNOUNCEMENTS = data.announcements;
+    }
+    liveDataFetchedAt = data.fetchedAt || null;
+    rerenderAfterLiveData();
+  } catch (e) {}
+}
+
+function rerenderAfterLiveData() {
+  try { renderHomeSchedule(); } catch (e) {}
+  try { renderNextBus(); } catch (e) {}
+  try { renderHomeAnnounce(); } catch (e) {}
+  try { renderAnnouncements(); } catch (e) {}
+  try { if (activeSubTab === 'events') renderSchedule(false); } catch (e) {}
+  try { if (activeSubTab === 'transport') renderTransport(false); } catch (e) {}
+  try { updateAnnounceBadge(); } catch (e) {}
+}
+
+function liveDataStaleLabel() {
+  if (!liveDataFetchedAt) return '';
+  const d = new Date(liveDataFetchedAt);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const isStale = (Date.now() - liveDataFetchedAt) > LIVE_STALE_AFTER_MS;
+  const color = isStale ? 'var(--text-3)' : 'var(--text-2)';
+  const prefix = isStale ? 'อัปเดตล่าสุด ' : 'อัปเดตล่าสุด ';
+  return '<div style="font-size:11px;color:' + color + ';text-align:center;padding:8px 0;opacity:.7;">'
+    + prefix + hh + ':' + mm + (isStale ? ' (อาจไม่เป็นปัจจุบัน)' : '') + '</div>';
 }
 
 // ════════════════════════════════════════════════════════
@@ -2496,8 +2729,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Then refresh announcements from /data.json (live).
-  loadAnnouncements();
+  // Restore last-good live data from localStorage immediately, so screens
+  // render with the freshest known content even before the network responds.
+  restoreLiveDataFromCache();
+
+  // Then fetch fresh data from Google Sheets.
+  loadLiveData();
 
   // Mark announcements as seen when the user actually visits the Updates tab.
   const navAnnounce = document.getElementById('nav-announce');
@@ -2513,11 +2750,11 @@ document.addEventListener('DOMContentLoaded', function() {
   var ric = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : function(cb){ setTimeout(cb, 1); };
   setInterval(function(){ ric(function(){ renderHomeSchedule(); renderNextBus(); }); }, 60000);
   setInterval(function(){ ric(function(){ if(campDay()!==-1 && activeDay===campDay()) renderSchedule(false); }); }, 60000);
-  setInterval(loadAnnouncements, 5 * 60 * 1000);
+  setInterval(loadLiveData, 5 * 60 * 1000);
 
   // Refresh announcements when the app is brought back to the foreground.
   document.addEventListener('visibilitychange', function() {
-    if (document.visibilityState === 'visible') loadAnnouncements();
+    if (document.visibilityState === 'visible') loadLiveData();
   });
 
   if ('serviceWorker' in navigator) {
