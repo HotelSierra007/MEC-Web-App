@@ -1716,7 +1716,7 @@ function renderAnnouncements() {
         <div class="ann-text">${esc(a.message)}</div>
         ${a.type!=='info'?`<span class="ann-type-tag ann-type-${a.type}">${a.type==='change'?'Schedule Change':'Urgent'}</span>`:''}
       </div>
-    </div>`).join('');
+    </div>`).join('') + liveDataStaleLabel();
 }
 
 // ════════════════════════════════════════════════════════
@@ -2701,6 +2701,9 @@ function liveDataStaleLabel() {
 // INIT
 // ════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function() {
+  // Defined first so every later ric() call is safe.
+  var ric = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : function(cb){ setTimeout(cb, 1); };
+
 
   // Register all touch events as passive for smooth scrolling
   document.querySelectorAll('.screen').forEach(function(el) {
@@ -2749,8 +2752,6 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Periodic refresh: schedule/bus every 60s, announcements every 5min.
-  // requestIdleCallback defers DOM work until the browser is idle (not mid-scroll).
-  var ric = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : function(cb){ setTimeout(cb, 1); };
   setInterval(function(){ ric(function(){ renderHomeSchedule(); renderNextBus(); }); }, 60000);
   setInterval(function(){ ric(function(){ if(campDay()!==-1 && activeDay===campDay()) renderSchedule(false); }); }, 60000);
   setInterval(loadLiveData, 5 * 60 * 1000);
