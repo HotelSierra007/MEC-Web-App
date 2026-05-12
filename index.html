@@ -758,7 +758,7 @@
     .tc.tc-cancelled .tc-time,
     .tc.tc-cancelled .tc-place { text-decoration:line-through; text-decoration-thickness:1.5px; }
     .tc.tc-delayed { background:rgba(245,200,66,.05); border-color:rgba(245,200,66,.35); }
-    .tc-notes { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-2); margin-top:8px; padding-top:8px; border-top:1px solid var(--border-lt); line-height:1.45; }
+    .tc-notes { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-2); margin-top:8px; padding-top:8px; border-top:1px solid var(--border-lt); margin-bottom:8px; line-height:1.45; }
     .tc-notes svg { width:13px; height:13px; flex-shrink:0; }
     .tc.tc-delayed .tc-notes   { color:var(--yellow); }
     .tc.tc-cancelled .tc-notes { color:var(--red); opacity:.9; }
@@ -1942,7 +1942,7 @@ function renderTransport(scrollToCurrent, dayVal) {
     var extraClass  = isCancelled ? ' tc-cancelled' : (isDelayed ? ' tc-delayed' : '');
     var stateClass  = (isCancelled || isDelayed) ? '' : (isNow ? ' now' : (isUpcoming ? ' upcoming' : ''));
     var timeClass   = (isCancelled || isDelayed) ? '' : stateClass;
-    var notesHtml   = (t.notes && (isCancelled || isDelayed))
+    var notesHtml   = t.notes
       ? '<div class="tc-notes">' + warningIcon + esc(t.notes) + '</div>' : '';
     html += '<div class="tc' + extraClass + stateClass + '">' +
       '<div class="tc-times">' +
